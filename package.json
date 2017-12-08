@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@types/node": "^8.0.57",
+    "commander": "^2.12.2",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.2"
+  },
+  "name": "TweetArchiver2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Kenichi Saito <hajime@studiohff.net>",
+  "license": "MIT"
+}
