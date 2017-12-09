@@ -3,6 +3,7 @@
 import * as url from "url";
 
 import * as Commander from "commander";
+import * as DataStore from "nedb";
 
 import TwitterGateway from "./twitterGateway";
 
@@ -68,5 +69,31 @@ commandLineParser
     .action((fileName) => {
         console.log(`output ${fileName}`);
     });
+
+const tweetDb = new DataStore({ filename: "tweet.db" });
+tweetDb.loadDatabase((error) => {
+    if (error !== null) {
+        console.log(error);
+        process.exit(1);
+    }
+});
+
+tweetDb.insert({ text: "にゃーん" }, (error, newDoc) => {
+    if (error !== null) {
+        console.log(error);
+        process.exit(1);
+    }
+});
+
+tweetDb.find({}, (error, newDocs) => {
+    if (error !== null) {
+        console.log(error);
+        process.exit(1);
+    }
+
+    for (const newDoc of newDocs) {
+        console.log(newDoc);
+    }
+});
 
 commandLineParser.parse(process.argv);

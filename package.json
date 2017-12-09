@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "@types/nedb": "^1.8.5",
     "@types/node": "^8.0.57",
     "commander": "^2.12.2",
+    "nedb": "^1.8.0",
     "tslint": "^5.8.0",
     "twitter": "^1.7.1",
     "typescript": "^2.6.2"
