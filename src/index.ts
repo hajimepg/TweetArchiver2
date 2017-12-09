@@ -21,12 +21,8 @@ function parseTweetId(urlString): string | null {
     return regExpResult[1];
 }
 
-const commandLineParser = Commander
-    .version("0.0.1");
-
-commandLineParser
-    .command("add <tweet_url>")
-    .action((tweetUrlValue) => {
+function createAddCommandHandler(commandLineParser: any, tweetRepository: TweetRepository) {
+    return (tweetUrlValue) => {
         const tweetId = parseTweetId(tweetUrlValue);
 
         if (tweetId === null) {
@@ -43,44 +39,53 @@ commandLineParser
 
         (async () => {
             const tweet = await twitterGateway.getTweet((tweetId as string));
-            console.log(JSON.stringify(tweet, null, 4));
+
+            await tweetRepository.insert(tweet);
         })()
         .catch((error) => {
             console.log(error);
             process.exit(1);
         });
-    });
-
-commandLineParser
-    .command("remove <tweet_url>")
-    .action((tweetUrlValue) => {
-        const tweetId = parseTweetId(tweetUrlValue);
-
-        if (tweetId === null) {
-            commandLineParser.help();
-            process.exit(1);
-        }
-
-        console.log(`remove ${tweetId}`);
-    });
-
-commandLineParser
-    .command("output <file_name>")
-    .action((fileName) => {
-        console.log(`output ${fileName}`);
-    });
+    };
+}
 
 (async () => {
     const tweetRepository = new TweetRepository();
 
     await tweetRepository.load();
-    await tweetRepository.insert({ text: "にゃーん" });
+
+    const commandLineParser = Commander
+        .version("0.0.1");
+
+    commandLineParser
+        .command("add <tweet_url>")
+        .action(createAddCommandHandler(commandLineParser, tweetRepository));
+
+    commandLineParser
+        .command("remove <tweet_url>")
+        .action((tweetUrlValue) => {
+            const tweetId = parseTweetId(tweetUrlValue);
+
+            if (tweetId === null) {
+                commandLineParser.help();
+                process.exit(1);
+            }
+
+            console.log(`remove ${tweetId}`);
+        });
+
+    commandLineParser
+        .command("output <file_name>")
+        .action((fileName) => {
+            console.log(`output ${fileName}`);
+        });
+
+    commandLineParser.parse(process.argv);
+
     const newDocs = await tweetRepository.find({});
     for (const newDoc of newDocs) {
         console.log(newDoc);
     }
-
-    commandLineParser.parse(process.argv);
 })()
 .catch((error) => {
     console.log(error);
