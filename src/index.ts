@@ -4,6 +4,8 @@ import * as url from "url";
 
 import * as Commander from "commander";
 
+import TwitterGateway from "./twitterGateway";
+
 function parseTweetId(urlString): string | null {
     const tweetUrl = url.parse(urlString);
     if (tweetUrl.hostname !== "twitter.com" || tweetUrl.pathname === undefined) {
@@ -31,7 +33,21 @@ commandLineParser
             process.exit(1);
         }
 
-        console.log(`add ${tweetId}`);
+        const twitterGateway = new TwitterGateway({
+            access_token_key: process.env.TWITTER_ACCESS_TOKEN_KEY,
+            access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
+            consumer_key: process.env.TWITTER_CONSUMER_KEY,
+            consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+        });
+
+        (async () => {
+            const tweet = await twitterGateway.getTweet((tweetId as string));
+            console.log(JSON.stringify(tweet, null, 4));
+        })()
+        .catch((error) => {
+            console.log(error);
+            process.exit(1);
+        });
     });
 
 commandLineParser

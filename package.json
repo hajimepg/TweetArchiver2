@@ -3,6 +3,7 @@
     "@types/node": "^8.0.57",
     "commander": "^2.12.2",
     "tslint": "^5.8.0",
+    "twitter": "^1.7.1",
     "typescript": "^2.6.2"
   },
   "name": "TweetArchiver2",
