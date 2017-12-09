@@ -21,45 +21,37 @@ function parseTweetId(urlString): string | null {
     return regExpResult[1];
 }
 
-function createAddCommandHandler(commandLineParser: any, tweetRepository: TweetRepository) {
-    return (tweetUrlValue) => {
-        const tweetId = parseTweetId(tweetUrlValue);
-
-        if (tweetId === null) {
-            commandLineParser.help();
-            process.exit(1);
-        }
-
-        const twitterGateway = new TwitterGateway({
-            access_token_key: process.env.TWITTER_ACCESS_TOKEN_KEY,
-            access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
-            consumer_key: process.env.TWITTER_CONSUMER_KEY,
-            consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-        });
-
-        (async () => {
-            const tweet = await twitterGateway.getTweet((tweetId as string));
-
-            await tweetRepository.insert(tweet);
-        })()
-        .catch((error) => {
-            console.log(error);
-            process.exit(1);
-        });
-    };
-}
-
-(async () => {
-    const tweetRepository = new TweetRepository();
-
-    await tweetRepository.load();
-
+function setUpCommandLineParser(tweetRepository: TweetRepository): any {
     const commandLineParser = Commander
         .version("0.0.1");
 
     commandLineParser
         .command("add <tweet_url>")
-        .action(createAddCommandHandler(commandLineParser, tweetRepository));
+        .action((tweetUrlValue) => {
+            const tweetId = parseTweetId(tweetUrlValue);
+
+            if (tweetId === null) {
+                commandLineParser.help();
+                process.exit(1);
+            }
+
+            const twitterGateway = new TwitterGateway({
+                access_token_key: process.env.TWITTER_ACCESS_TOKEN_KEY,
+                access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
+                consumer_key: process.env.TWITTER_CONSUMER_KEY,
+                consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+            });
+
+            (async () => {
+                const tweet = await twitterGateway.getTweet((tweetId as string));
+
+                await tweetRepository.insert(tweet);
+            })()
+            .catch((error) => {
+                console.log(error);
+                process.exit(1);
+            });
+        });
 
     commandLineParser
         .command("remove <tweet_url>")
@@ -80,6 +72,14 @@ function createAddCommandHandler(commandLineParser: any, tweetRepository: TweetR
             console.log(`output ${fileName}`);
         });
 
+    return commandLineParser;
+}
+
+(async () => {
+    const tweetRepository = new TweetRepository();
+    await tweetRepository.load();
+
+    const commandLineParser = setUpCommandLineParser(tweetRepository);
     commandLineParser.parse(process.argv);
 
     const newDocs = await tweetRepository.find({});
