@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
+import * as fs from "fs";
+import * as path from "path";
 import * as url from "url";
 
 import * as Commander from "commander";
+import * as Nunjucks from "nunjucks";
+import * as TwitterText from "twitter-text";
 
+import * as FileSystemUtil from "./fileSystemUtil";
 import TweetRepository from "./tweetRepository";
 import TwitterGateway from "./twitterGateway";
 
@@ -73,9 +78,46 @@ function setUpCommandLineParser(tweetRepository: TweetRepository): any {
         });
 
     commandLineParser
-        .command("output <file_name>")
+        .command("output")
         .action((fileName) => {
-            console.log(`output ${fileName}`);
+            (async () => {
+                const tweets = await tweetRepository.find({});
+
+                if (tweets.length === 0)  {
+                    console.log("no tweets found");
+                    process.exit(0);
+                }
+
+                const dirName = FileSystemUtil.createDirName();
+                fs.mkdirSync(dirName);
+
+                for (const staticFileName of ["icon.jpg", "normalize.css", "styles.css"]) {
+                    const src = path.join("./templates", staticFileName);
+                    const dest = path.join(dirName, staticFileName);
+
+                    fs.copyFileSync(src, dest);
+                }
+
+                for (const tweet of tweets) {
+                    tweet.autoLinkedText = TwitterText.autoLink(tweet.text, { urlEntities: tweet.entities.urls });
+                }
+
+                /* tslint:disable:object-literal-sort-keys */
+                const data = {
+                    tweets,
+                    iconFileName: "icon.jpg",   // TODO: implement!
+                    images: [],                 // TODO: implement!
+                };
+                /* tslint:enable:object-literal-sort-keys */
+
+                const env = Nunjucks.configure("templates");
+                const indexFileName = path.join(dirName, "index.html");
+                fs.writeFileSync(indexFileName, env.render("index.njk", data));
+            })()
+            .catch((error) => {
+                console.log(error);
+                process.exit(1);
+            });
         });
 
     return commandLineParser;
@@ -87,11 +129,6 @@ function setUpCommandLineParser(tweetRepository: TweetRepository): any {
 
     const commandLineParser = setUpCommandLineParser(tweetRepository);
     commandLineParser.parse(process.argv);
-
-    const newDocs = await tweetRepository.find({});
-    for (const newDoc of newDocs) {
-        console.log(newDoc);
-    }
 })()
 .catch((error) => {
     console.log(error);

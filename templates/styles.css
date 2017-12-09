@@ -1,0 +1,39 @@
+.container {
+    width: 600px;
+    margin: 0 auto;
+}
+
+.tweets {
+    padding: 15px;
+}
+
+.tweet {
+    position: relative;
+    padding: 5px 15px 20px 60px;
+}
+
+.tweet:not(:last-child) {
+    border-bottom: dashed 1px darkgray;
+}
+
+.icon {
+    position: absolute;
+    top: 5px;
+    left: 0;
+}
+
+.icon img {
+    border-radius: 5px;
+}
+
+.name {
+    font-size: 15px;
+    margin-bottom: 7px;
+}
+
+.time {
+    position: absolute;
+    bottom: 0px;
+    right: 0;
+    font-size: 13px;
+}

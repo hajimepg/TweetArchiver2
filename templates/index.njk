@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>TwitterAnalyzerElectronMockup</title>
+        <link rel="stylesheet" href="normalize.css">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+
+    <body>
+        <div class="container">
+            <section class="tweets">
+                {% for tweet in tweets %}
+                    <article class="tweet">
+                        <div class="icon">
+                            <img src="{{ iconFileName }}" width="48px" height="48px">
+                        </div>
+                        <div class="name"><strong>{{ tweet.user.name }}</strong><span>@{{ tweet.user.screen_name }}</span></div>
+                        <div class="text">{{ tweet.autoLinkedText | safe }}</div>
+                        <div class="time">{{ tweet.created_at }}</div>
+                        {% for image in images %}
+                            <img src="{{ image.fileName }}" width="{{ image.width }}px", height="{{ image.height }}px">
+                        {% endfor %}
+                    </article>
+                {% endfor %}
+            </section>
+        </div>
+    </body>
+</html>
