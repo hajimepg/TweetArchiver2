@@ -3,8 +3,8 @@
 import * as url from "url";
 
 import * as Commander from "commander";
-import * as DataStore from "nedb";
 
+import TweetRepository from "./tweetRepository";
 import TwitterGateway from "./twitterGateway";
 
 function parseTweetId(urlString): string | null {
@@ -70,30 +70,19 @@ commandLineParser
         console.log(`output ${fileName}`);
     });
 
-const tweetDb = new DataStore({ filename: "tweet.db" });
-tweetDb.loadDatabase((error) => {
-    if (error !== null) {
-        console.log(error);
-        process.exit(1);
-    }
-});
+(async () => {
+    const tweetRepository = new TweetRepository();
 
-tweetDb.insert({ text: "にゃーん" }, (error, newDoc) => {
-    if (error !== null) {
-        console.log(error);
-        process.exit(1);
-    }
-});
-
-tweetDb.find({}, (error, newDocs) => {
-    if (error !== null) {
-        console.log(error);
-        process.exit(1);
-    }
-
+    await tweetRepository.load();
+    await tweetRepository.insert({ text: "にゃーん" });
+    const newDocs = await tweetRepository.find({});
     for (const newDoc of newDocs) {
         console.log(newDoc);
     }
-});
 
-commandLineParser.parse(process.argv);
+    commandLineParser.parse(process.argv);
+})()
+.catch((error) => {
+    console.log(error);
+    process.exit(1);
+});
