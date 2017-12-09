@@ -63,7 +63,13 @@ function setUpCommandLineParser(tweetRepository: TweetRepository): any {
                 process.exit(1);
             }
 
-            console.log(`remove ${tweetId}`);
+            (async () => {
+                await tweetRepository.remove({ id_str: tweetId });
+            })()
+            .catch((error) => {
+                console.log(error);
+                process.exit(1);
+            });
         });
 
     commandLineParser

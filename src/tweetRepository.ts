@@ -31,6 +31,18 @@ export default class TweetRepository {
         });
     }
 
+    public async remove(condition): Promise<number> {
+        return new Promise<number>((resolve, reject) => {
+            this.db.remove(condition, (error, numRemoved) => {
+                if (error !== null) {
+                    reject(error);
+                }
+
+                resolve(numRemoved);
+            });
+        });
+    }
+
     public async find(condition): Promise<any[]> {
         return new Promise<any[]>((resolve, reject) => {
             this.db.find(condition, (error, newDocs) => {
