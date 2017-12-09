@@ -4,7 +4,7 @@ export default class TweetRepository {
     private db;
 
     public constructor() {
-        this.db = new DataStore({ filename: "tweet.db" });
+        this.db = new DataStore({ filename: "db/tweet.db" });
     }
 
     public async load(): Promise<void> {
