@@ -128,7 +128,7 @@ function setUpCommandLineParser(tweetRepository: TweetRepository): any {
             }
 
             (async () => {
-                await tweetRepository.remove({ id_str: tweetId });
+                await tweetRepository.remove({ "originalTweet.id_str": tweetId });
             })()
             .catch((error) => {
                 console.log(error);
