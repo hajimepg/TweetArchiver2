@@ -18,8 +18,8 @@
                         <div class="name"><strong>{{ tweet.originalTweet.user.name }}</strong><span>@{{ tweet.originalTweet.user.screen_name }}</span></div>
                         <div class="text">{{ tweet.autoLinkedText | safe }}</div>
                         <div class="time">{{ tweet.originalTweet.created_at }}</div>
-                        {% for image in images %}
-                            <img src="{{ image.fileName }}" width="{{ image.width }}px", height="{{ image.height }}px">
+                        {% for media in tweet.media %}
+                            <img src="{{ media.fileName }}" width="{{ media.displayWidth }}px", height="{{ media.displayHeight }}px">
                         {% endfor %}
                     </article>
                 {% endfor %}

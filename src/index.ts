@@ -27,6 +27,18 @@ function parseTweetId(urlString): string | null {
     return regExpResult[1];
 }
 
+function imageFileExistsWithBaseName(dirName: string, baseName: string): string | null {
+    for (const iconExtension of ["jpg", "png"]) {
+        const iconFullPath = path.join(dirName, `${baseName}.${iconExtension}`);
+
+        if (fs.existsSync(iconFullPath)) {
+            return `${baseName}.${iconExtension}`;
+        }
+    }
+
+    return null;
+}
+
 function setUpCommandLineParser(tweetRepository: TweetRepository): any {
     const commandLineParser = Commander
         .version("0.0.1");
@@ -50,6 +62,7 @@ function setUpCommandLineParser(tweetRepository: TweetRepository): any {
 
             (async () => {
                 const tweet = await twitterGateway.getTweet((tweetId as string));
+                // console.log(JSON.stringify(tweet, null, 4));
 
                 const iconDirName = "./db/icons/";
                 if (fs.existsSync(iconDirName) === false) {
@@ -58,24 +71,41 @@ function setUpCommandLineParser(tweetRepository: TweetRepository): any {
 
                 const iconBaseFileName = tweet.user.screen_name;
 
-                let iconFileName: string | null = null;
-                for (const iconExtension of ["jpg", "png"]) {
-                    const iconFullPath = path.join(iconDirName, `${iconBaseFileName}.${iconExtension}`);
-
-                    if (fs.existsSync(iconFullPath)) {
-                        iconFileName = `${iconBaseFileName}.${iconExtension}`;
-                    }
-                }
+                let iconFileName = imageFileExistsWithBaseName(iconDirName, iconBaseFileName);
 
                 if (iconFileName === null) {
                     iconFileName = await downloadProfileImage(tweet.user.profile_image_url,
                         iconDirName, iconBaseFileName);
                 }
 
+                const mediaDirName = "./db/media/";
+                if (fs.existsSync(mediaDirName) === false) {
+                    fs.mkdirSync(mediaDirName);
+                }
+
+                const media = new Array<object>();
+                if (tweet.extended_entities !== undefined) {
+                    for (const mediaEntity of tweet.extended_entities.media) {
+                        const mediaBaseName = mediaEntity.id_str;
+                        let mediaFileName = imageFileExistsWithBaseName(mediaDirName, mediaBaseName);
+
+                        if (mediaFileName === null) {
+                            mediaFileName = await downloadMedia(mediaEntity.media_url, mediaDirName, mediaBaseName);
+                        }
+
+                        media.push({
+                            fileName: mediaFileName,
+                            height: mediaEntity.sizes.medium.h,
+                            width: mediaEntity.sizes.medium.w
+                        });
+                    }
+                }
+
                 /* tslint:disable:object-literal-sort-keys */
                 const newDoc = {
                     originalTweet : tweet,
                     iconFileName,
+                    media,
                 };
                 /* tslint:enable:object-literal-sort-keys */
 
@@ -133,21 +163,35 @@ function setUpCommandLineParser(tweetRepository: TweetRepository): any {
                         { urlEntities: tweet.originalTweet.entities.urls }
                     );
 
-                    const src = path.join("./db/icons/", tweet.iconFileName);
-                    const dest = path.join(dirName,  tweet.iconFileName);
-                    fs.copyFileSync(src, dest);
-                }
+                    const iconSrc = path.join("./db/icons/", tweet.iconFileName);
+                    const iconDest = path.join(dirName,  tweet.iconFileName);
+                    fs.copyFileSync(iconSrc, iconDest);
 
-                /* tslint:disable:object-literal-sort-keys */
-                const data = {
-                    tweets,
-                    images: [],                 // TODO: implement!
-                };
-                /* tslint:enable:object-literal-sort-keys */
+                    for (const media of tweet.media) {
+                        const mediaSrc = path.join("./db/media/", media.fileName);
+                        const mediaDest = path.join(dirName,  media.fileName);
+                        fs.copyFileSync(mediaSrc, mediaDest);
+
+                        if (media.width >= media.height && media.width > 400) {
+                            const resizeRate = media.width / 400;
+                            media.displayWidth = media.width / resizeRate;
+                            media.displayHeight = media.height / resizeRate;
+                        }
+                        else if (media.height > media.width && media.height > 400) {
+                            const resizeRate = media.height / 400;
+                            media.displayWidth = media.width / resizeRate;
+                            media.displayHeight = media.height / resizeRate;
+                        }
+                        else {
+                            media.displayWidth = media.width;
+                            media.displayHeight = media.height;
+                        }
+                    }
+                }
 
                 const env = Nunjucks.configure("templates");
                 const indexFileName = path.join(dirName, "index.html");
-                fs.writeFileSync(indexFileName, env.render("index.njk", data));
+                fs.writeFileSync(indexFileName, env.render("index.njk", { tweets }));
             })()
             .catch((error) => {
                 console.log(error);
