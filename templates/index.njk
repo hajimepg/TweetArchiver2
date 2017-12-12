@@ -19,7 +19,7 @@
                         <div class="text">{{ tweet.autoLinkedText | safe }}</div>
                         <div class="time">{{ tweet.originalTweet.created_at }}</div>
                         {% for media in tweet.media %}
-                            <img src="{{ media.fileName }}" width="{{ media.displayWidth }}px", height="{{ media.displayHeight }}px">
+                            <img src="{{ media.fileName }}" width="{{ media.displayWidth }}px" height="{{ media.displayHeight }}px">
                         {% endfor %}
                     </article>
                 {% endfor %}
